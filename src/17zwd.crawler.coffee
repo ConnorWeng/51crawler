@@ -30,7 +30,7 @@ c = new crawler.Crawler
             if txt? then $.trim txt else ''
 
         isServiceAvailable = (serviceName) ->
-            if services.indexOf serviceName isnt -1 then '1' else '0'
+            if services isnt '' and services.indexOf(serviceName) isnt -1 then '1' else '0'
 
         $marketListItem = $('.market-list-item')
 
@@ -74,5 +74,5 @@ c = new crawler.Crawler
             console.log "#{++counter}.#{shopname} : complete"
             delete mainSellMap[shopname]
 
-while page < maxPage
+while page <= maxPage
     c.queue "http://#{region}.17zwd.com/market.aspx?page=#{page++}"
