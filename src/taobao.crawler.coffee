@@ -6,10 +6,10 @@ mysql = require 'mysql'
 count = 0
 
 connection = mysql.createConnection
-    host: 'localhost'
+    host: 'rdsqr7ne2m2ifjm.mysql.rds.aliyuncs.com'
     port: 3306
-    user: 'root'
-    password: '57826502'
+    user: 'test2'
+    password: 'xiaoweng51wangpi'
     database: 'test2'
 
 c = new crawler.Crawler
@@ -88,7 +88,10 @@ queueStore = (uri) ->
 
                 c.queue urlArray
             catch e
-                report "#{result.uri}", e
+                try
+                    report "#{result.uri}", e
+                catch ee
+                    report "result is undefined or result.uri is undefined", ee
     ]
 
 connection.query 'select store_id,store_name,shop_http,im_ww,see_price from ecm_store', (err, res) ->
