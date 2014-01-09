@@ -1,16 +1,23 @@
-fs = require 'fs'
 util = require 'util'
 crawler = require 'crawler'
 mysql = require 'mysql'
 
 count = 0
+stores = []
+nextFlag = true
 
-connection = mysql.createConnection
-    host: 'rdsqr7ne2m2ifjm.mysql.rds.aliyuncs.com'
-    port: 3306
-    user: 'test2'
-    password: 'xiaoweng51wangpi'
-    database: 'test2'
+getConnection = () ->
+    mysql.createConnection
+        host: 'rdsqr7ne2m2ifjm.mysql.rds.aliyuncs.com'
+        user: 'test2'
+        password: 'xiaoweng51wangpi'
+        # host: 'localhost'
+        # user: 'root'
+        # password: '57826502'
+        port: 3306
+        database: 'test2'
+
+connection = getConnection()
 
 c = new crawler.Crawler
 
@@ -20,10 +27,6 @@ c = new crawler.Crawler
     'forceUTF8': true
 
     'maxConnections': 1
-
-    'onDrain': () ->
-        connection.end()
-        report "total:#{count}"
 
     'callback': (error, result, $) ->
         try
@@ -41,7 +44,9 @@ c = new crawler.Crawler
                 goodHttp = $e.find('a.item-name').attr('href')
 
                 # merge into database
-                connection.query "call proc_merge_good('#{storeId}','#{defaultImage}','#{price}','#{goodHttp}','#{cid}','#{storeName}','#{goodsName}',@o_retcode)", (err, res) ->
+                conn = getConnection()
+                conn.query "call proc_merge_good('#{storeId}','#{defaultImage}','#{price}','#{goodHttp}','#{cid}','#{storeName}','#{goodsName}',@o_retcode)", (err, res) ->
+                    conn.end()
                     if not err
                         resObj = res[0][0]
                         if resObj['o_retcode'] is -1
@@ -58,6 +63,9 @@ c = new crawler.Crawler
             $next = $('a.J_SearchAsync.next')
             if $next.length > 0
                 c.queue $next.attr('href') + "###{storeName}###{storeId}###{seePrice}"
+            else
+                nextFlag = true
+                report "#{storeName}'s #{cid} finished."
         catch e
             report e
 
@@ -73,9 +81,11 @@ queueStore = (uri) ->
 
                 # fetch and update cate_content
                 cateContent = $('ul.cats-tree').parent().html().replace(/\s+/g, '')
-                connection.query "update ecm_store set cate_content='#{cateContent}' where store_id = #{storeId}", (err, res) ->
+                conn = getConnection()
+                conn.query "update ecm_store set cate_content='#{cateContent}' where store_id = #{storeId}", (err, res) ->
+                    conn.end()
                     if err
-                        report err, "!!!#{storeId} #{storeName}: failed!"
+                        report "!!!#{storeId} #{storeName}: failed!", err
 
                 # fetch url
                 urlArray = []
@@ -94,14 +104,23 @@ queueStore = (uri) ->
                     report "result is undefined or result.uri is undefined", ee
     ]
 
-connection.query 'select store_id,store_name,shop_http,im_ww,see_price from ecm_store', (err, res) ->
-    handleStore = (store) ->
-        storeId = store['store_id']
-        storeName = store['store_name']
-        seePrice = store['see_price']
-        queueStore store['shop_http'] + "###{store['store_name']}###{store['store_id']}###{store['see_price']}"
+connection.query 'select store_id,store_name,shop_http,im_ww,see_price from ecm_store order by store_id', (err, res) ->
+    handleStore = () ->
+        if nextFlag
+            nextFlag = false
+            if stores.length > 0
+                store = stores.shift()
+                storeId = store['store_id']
+                storeName = store['store_name']
+                seePrice = store['see_price']
+                queueStore store['shop_http'] + "###{store['store_name']}###{store['store_id']}###{store['see_price']}"
+            else
+                return
+        setTimeout handleStore, 1000
 
-    handleStore store for store in res
+    connection.end()
+    stores = res
+    setTimeout handleStore, 1000
 
 pureText = (txt) ->
     if txt? then txt.trim() else ''
@@ -121,9 +140,10 @@ parsePrice = (price, seePrice) ->
         report "不支持该see_price: #{seePrice}"
         rawPrice
 
-report = (err, msg) ->
-    if typeof err is 'string' and not msg?
-        util.log err
+report = (msg, err) ->
+    if typeof msg is 'string' and not err?
+        util.log msg
+    else if typeof msg is 'object' and not err?
+        util.log util.inspect(err, {depth: 4})
     else
-        msg ?= ''
-        util.log msg + '::' + util.inspect err, {depth: 4}
+        util.log msg + '::' + util.inspect(err, {depth: 4})
