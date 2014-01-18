@@ -2,6 +2,25 @@ util = require 'util'
 crawler = require 'crawler'
 mysql = require 'mysql'
 
+FETCH_TYPE =
+    SINGLE_PAGE: 0
+    ALL: 1
+
+parseArguments = (args) ->
+    if args.length == 0
+        type = FETCH_TYPE.ALL
+    else if args.length == 2
+        type = FETCH_TYPE.SINGLE_PAGE
+        storeId = args[0]
+        cid = args[1]
+    argsObj =
+        type: type
+        storeId: storeId
+        cid: cid
+
+args = process.argv.slice(2)
+parsedArguments = parseArguments args
+fetchType = parsedArguments.type
 count = 0
 stores = []
 nextFlag = true
@@ -60,10 +79,14 @@ c = new crawler.Crawler
 
                 count++
 
-            $next = $('a.J_SearchAsync.next')
-            if $next.length > 0
-                c.queue $next.attr('href') + "###{storeName}###{storeId}###{seePrice}"
-            else
+            if fetchType is FETCH_TYPE.ALL
+                $next = $('a.J_SearchAsync.next')
+                if $next.length > 0
+                    c.queue $next.attr('href') + "###{storeName}###{storeId}###{seePrice}"
+                else
+                    nextFlag = true
+                    report "#{storeName}'s #{cid} finished."
+            else if fetchType is FETCH_TYPE.SINGLE_PAGE
                 nextFlag = true
                 report "#{storeName}'s #{cid} finished."
         catch e
@@ -90,11 +113,10 @@ queueStore = (uri) ->
                 # fetch url
                 urlArray = []
                 $('a.cat-name').each () ->
-                    href = this.href.replace /\#.+/g, ''
-                    if urlArray.indexOf(href, '') is -1
-                        if href.indexOf('category-') isnt -1
-                            urlArray.push href + "###{storeName}###{storeId}###{seePrice}"
-                            #TODO: handle url
+                    href = this.href.replace(/\#.+/g, '') + '&orderType=newOn' + "###{storeName}###{storeId}###{seePrice}"
+                    if fetchType is FETCH_TYPE.SINGLE_PAGE and href.indexOf(parsedArguments.cid) is -1 then return
+                    if urlArray.indexOf(href, '') is -1 and href.indexOf('category-') isnt -1
+                        urlArray.push href
 
                 c.queue urlArray
             catch e
@@ -104,7 +126,10 @@ queueStore = (uri) ->
                     report "result is undefined or result.uri is undefined", ee
     ]
 
-connection.query 'select store_id,store_name,shop_http,im_ww,see_price from ecm_store order by store_id', (err, res) ->
+storeSql = 'select store_id,store_name,shop_http,im_ww,see_price from ecm_store order by store_id'
+if fetchType is FETCH_TYPE.SINGLE_PAGE then storeSql = "select store_id,store_name,shop_http,im_ww,see_price from ecm_store where store_id = '#{parsedArguments.storeId}' order by store_id"
+
+connection.query storeSql, (err, res) ->
     handleStore = () ->
         if nextFlag
             nextFlag = false
