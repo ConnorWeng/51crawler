@@ -103,7 +103,7 @@ queueStore = (uri) ->
                 seePrice = urlParts[3]
 
                 # fetch and update cate_content
-                cateContent = $('ul.cats-tree').parent().html().trim()
+                cateContent = $('ul.cats-tree').parent().html().trim().replace(/\"http.+category-(\d+).+\"/g, '"index.php?app=category2&cid=$1&shop_id=' + storeId + '"')
                 conn = getConnection()
                 conn.query "update ecm_store set cate_content='#{cateContent}' where store_id = #{storeId}", (err, res) ->
                     conn.end()
