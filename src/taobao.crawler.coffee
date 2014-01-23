@@ -103,7 +103,7 @@ queueStore = (uri) ->
                 seePrice = urlParts[3]
 
                 # fetch and update cate_content
-                cateContent = $('ul.cats-tree').parent().html().trim().replace(/\"http.+category-(\d+).+\"/g, '"index.php?app=category2&cid=$1&shop_id=' + storeId + '"').replace(/\r\n/g, '')
+                cateContent = $('ul.cats-tree').parent().html().trim().replace(/\"http.+category-(\d+).+\"/g, '"showCat.php?cid=$1&shop_id=' + storeId + '"').replace(/\r\n/g, '')
                 conn = getConnection()
                 conn.query "update ecm_store set cate_content='#{cateContent}' where store_id = #{storeId}", (err, res) ->
                     conn.end()
@@ -126,8 +126,8 @@ queueStore = (uri) ->
                     report "result is undefined or result.uri is undefined", ee
     ]
 
-storeSql = 'select store_id,store_name,shop_http,im_ww,see_price from ecm_store order by store_id'
-if fetchType is FETCH_TYPE.SINGLE_PAGE then storeSql = "select store_id,store_name,shop_http,im_ww,see_price from ecm_store where store_id = '#{parsedArguments.storeId}' order by store_id"
+storeSql = 'select store_id,store_name,shop_http,im_ww,see_price from ecm_store where state = 1 order by store_id'
+if fetchType is FETCH_TYPE.SINGLE_PAGE then storeSql = "select store_id,store_name,shop_http,im_ww,see_price from ecm_store where state = 1 and store_id = '#{parsedArguments.storeId}' order by store_id"
 
 connection.query storeSql, (err, res) ->
     handleStore = () ->
