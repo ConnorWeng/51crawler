@@ -59,7 +59,7 @@ c = new crawler.Crawler
                 $e = $(element)
                 defaultImage = pureText $e.find('.photo img').attr('data-ks-lazyload')
                 goodsName = $e.find('a.item-name').text()
-                price = parsePrice(pureText $e.find('.c-price').text(), seePrice)
+                price = parsePrice pureText($e.find('.c-price').text()), seePrice
                 goodHttp = $e.find('a.item-name').attr('href')
 
                 # merge into database
