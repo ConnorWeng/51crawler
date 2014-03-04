@@ -41,7 +41,7 @@ connection = getConnection()
 c = new crawler.Crawler
 
     'headers':
-        'Cookie': 'cna=NnHYCpjs31ACATonVlcvNAaP; tg=0; _cc_=Vq8l%2BKCLiw%3D%3D; tracknick=%5Cu6CE1%5Cu6CAB%5Cu2606%5Cu84DD%5Cu8336; _tb_token_=T6t1FP8DLim; uc1=cookie14=UoLU47zH%2BCGs3w%3D%3D; mt=ci=0_0; t=8c856cac8a6a0d00a73574e09195921f; cookie2=edf9076e51ff255cbe686887293054ba'
+        'Cookie': 'v=0; cna=MducCx8MKHsCAXTufkeemcwX; mt=ci%3D0_0; cookie2=96d64c9c38951a732fbaf3aea12dd2da; t=22bc108d7a9e3d3688e85700c4ffccd9; pnm_cku822=095WsMPac%2FFS4KgNn94nvw9Wm70ODBULv%2B84c4%3D%7CWUCLjKhqo9Lm%2FfJ1ccsWeSQ%3D%7CWMEKRlVG2DtUY3lc7%2BUsT237sjg%2FK64XSg%3D%3D%7CX0YLbX78NUR3aqcgpAbHqJAMQ6V25Fk2A5gWUWXXNlNlf%2FLVwcu5%7CXkdILojyXz4MFd7ZvediAziDmrVHgwVkAB%2FGyX68IfbU%2B%2BM%3D%7CXUeMwNRe85KrMv6YnBbDoo6Um9yo8jNCcOgjJNdt0Ie2q6YBsjCN5Nzz6w%3D%3D%7CXMYK7F8liOvH3hMUpzXkiaU%2FJw%3D%3D; _tb_token_=hS96Ba65n; uc1=cookie14=UoLVZqA23zK9Yg%3D%3D'
 
     'forceUTF8': true
 
