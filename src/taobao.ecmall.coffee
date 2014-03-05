@@ -78,9 +78,9 @@ c = new crawler.Crawler
                     if not err
                         resObj = res[0][0]
                         if resObj['o_retcode'] is 0
-                            report "#{resObj['i_description']} - succeed"
+                            report "#{resObj['i_description']}-#{goodsName} - succeed"
                         else if resObj['o_retcode'] is 1
-                            report "#{resObj['i_description']} - already exists."
+                            report "#{resObj['i_description']}-#{goodsName} - already exists."
                         else if resObj['o_retcode'] is -1
                             report 'failed to add good'
                     else
