@@ -3,13 +3,28 @@
 config =
     compiled: 'compiled'
     source: 'src'
+    test: 'test'
+
+watchCode = (dir) ->
+    watchSrc = exec "coffee -o #{config.compiled}/ -cw #{dir}/"
+    watchSrc.stdout.on 'data', (data) ->
+        process.stdout.write data
+
+task 'test', '', ->
+    test = exec "mocha #{config.compiled}/test*.js"
+    test.stdout.on 'data', (data) ->
+        process.stdout.write data
 
 task 'watch', '', ->
-    watch = exec "coffee -o #{config.compiled}/ -cw #{config.source}/"
-    watch.stdout.on 'data', (data) ->
+    watchCode config.source
+    watchCode config.test
+
+compileCode = (dir) ->
+    compile = exec "coffee -o #{config.compiled}/ -c #{dir}/"
+    compile.stdout.on 'data', (data) ->
         process.stdout.write data
 
 task 'build', '', ->
-    compile = exec "coffee -o #{config.compiled}/ -c #{config.source}/"
-    compile.stdout.on 'data', (data) ->
-        process.stdout.write data
+    compileCode config.source
+    compileCode config.test
+    invoke 'test'
