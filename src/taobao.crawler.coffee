@@ -27,14 +27,18 @@ nextFlag = true
 
 getConnection = () ->
     mysql.createConnection
-        host: 'rdsqr7ne2m2ifjm.mysql.rds.aliyuncs.com'
-        user: 'test2'
-        password: 'xiaoweng51wangpi'
-        # host: 'localhost'
-        # user: 'root'
-        # password: '57826502'
-        port: 3306
+        # host: 'rdsqr7ne2m2ifjm.mysql.rds.aliyuncs.com'
+        # user: 'test2'
+        # password: 'xiaoweng51wangpi'
+        host: 'localhost'
+        user: 'root'
+        password: '57826502'
         database: 'test2'
+        # host: 'rdsqr7ne2m2ifjm.mysql.rds.aliyuncs.com'
+        # user: 'wangpi51'
+        # password: '51374b78b104'
+        # database: 'wangpi51'
+        port: 3306
 
 connection = getConnection()
 
