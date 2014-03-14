@@ -10,6 +10,7 @@ create procedure proc_merge_good(
     in i_cid varchar(20),
     in i_store_name varchar(255),
     in i_goods_name varchar(255),
+    in i_add_time varchar(255),
     out o_retcode int)
 begin
     declare v_good_id int(10) unsigned;
@@ -29,7 +30,7 @@ begin
        end if;
        set o_retcode = 1;
     else
-       insert into ecm_goods(store_id, goods_name, default_image, price, good_http, cids) values (i_store_id, i_goods_name, i_default_image, i_price, i_good_http, i_cid);
+       insert into ecm_goods(store_id, goods_name, default_image, price, good_http, cids, add_time) values (i_store_id, i_goods_name, i_default_image, i_price, i_good_http, i_cid, i_add_time);
        set o_retcode = 2;
     end if;
 

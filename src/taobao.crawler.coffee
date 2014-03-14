@@ -45,7 +45,7 @@ connection = getConnection()
 c = new crawler.Crawler
 
     'headers':
-        'Cookie': 'v=0; cna=MducCx8MKHsCAXTufkeemcwX; mt=ci%3D0_0; cookie2=96d64c9c38951a732fbaf3aea12dd2da; t=22bc108d7a9e3d3688e85700c4ffccd9; pnm_cku822=095WsMPac%2FFS4KgNn94nvw9Wm70ODBULv%2B84c4%3D%7CWUCLjKhqo9Lm%2FfJ1ccsWeSQ%3D%7CWMEKRlVG2DtUY3lc7%2BUsT237sjg%2FK64XSg%3D%3D%7CX0YLbX78NUR3aqcgpAbHqJAMQ6V25Fk2A5gWUWXXNlNlf%2FLVwcu5%7CXkdILojyXz4MFd7ZvediAziDmrVHgwVkAB%2FGyX68IfbU%2B%2BM%3D%7CXUeMwNRe85KrMv6YnBbDoo6Um9yo8jNCcOgjJNdt0Ie2q6YBsjCN5Nzz6w%3D%3D%7CXMYK7F8liOvH3hMUpzXkiaU%2FJw%3D%3D; _tb_token_=hS96Ba65n; uc1=cookie14=UoLVZqA23zK9Yg%3D%3D'
+        'Cookie': 'cna=S2WXC+fHUhYCAbSc2MWOXx5g; miid=3533271021856440951; ali_ab=180.156.216.197.1393591678240.9; ck1=; uc3=nk2=B02oN3Be6g%3D%3D&id2=UoCKFOIGhiM%3D&vt3=F8dHqRBjeDiNc5VkpI8%3D&lg2=URm48syIIVrSKA%3D%3D; lgc=donyzjz; tracknick=donyzjz; _cc_=WqG3DMC9EA%3D%3D; tg=0; lzstat_uv=229541500245354180|2185014@3203012@3201199@2945730@2948565@2798379@2043323@3045821@3035619@3296882@2468846@2581762@3328751@3258589@2945527@3241813@3313950; l=donyzjz::1393599356505::11; v=0; cookie2=2a6ef628bc4b0a1eac9c3e659d64c3b1; mt=ci=0_0; t=61e67613e903af98c4eedf4211a3ae5c; x=e%3D1%26p%3D*%26s%3D0%26c%3D0%26f%3D0%26g%3D0%26t%3D0%26__ll%3D-1; swfstore=92836; _tb_token_=ee7bead50136b; uc1=cookie14=UoLVYfWzqzKWiQ%3D%3D'
 
     'forceUTF8': true
 
@@ -65,15 +65,17 @@ c = new crawler.Crawler
                 goodsName = $e.find('a.item-name').text()
                 price = parsePrice pureText($e.find('.c-price').text()), seePrice
                 goodHttp = $e.find('a.item-name').attr('href')
+                date = new Date()
+                dateTime = parseInt(date.getTime() / 1000)
 
                 # merge into database
                 conn = getConnection()
-                conn.query "call proc_merge_good('#{storeId}','#{defaultImage}','#{price}','#{goodHttp}','#{cid}','#{storeName}','#{goodsName}',@o_retcode)", (err, res) ->
+                conn.query "call proc_merge_good('#{storeId}','#{defaultImage}','#{price}','#{goodHttp}','#{cid}','#{storeName}','#{goodsName}','#{dateTime}',@o_retcode)", (err, res) ->
                     conn.end()
                     if not err
                         resObj = res[0][0]
                         if resObj['o_retcode'] is -1
-                            report "proc_merge_good error! parameter: '#{storeId}','#{defaultImage}','#{price}','#{goodHttp}','#{cid}','#{storeName}','#{goodsName}'"
+                            report "proc_merge_good error! parameter: '#{storeId}','#{defaultImage}','#{price}','#{goodHttp}','#{cid}','#{storeName}','#{goodsName}','#{dateTime}'"
                         else if resObj['o_retcode'] is 1
                             report "#{resObj['i_goods_name']} in #{resObj['i_store_name']} update successfully"
                         else if resObj['o_retcode'] is 2
