@@ -30,14 +30,14 @@ getConnection = () ->
         # host: 'rdsqr7ne2m2ifjm.mysql.rds.aliyuncs.com'
         # user: 'test2'
         # password: 'xiaoweng51wangpi'
-        host: 'localhost'
-        user: 'root'
-        password: '57826502'
-        database: 'test2'
-        # host: 'rdsqr7ne2m2ifjm.mysql.rds.aliyuncs.com'
-        # user: 'wangpi51'
-        # password: '51374b78b104'
-        # database: 'wangpi51'
+        # host: 'localhost'
+        # user: 'root'
+        # password: '57826502'
+        # database: 'test2'
+        host: 'rdsqr7ne2m2ifjm.mysql.rds.aliyuncs.com'
+        user: 'wangpi51'
+        password: '51374b78b104'
+        database: 'wangpi51'
         port: 3306
 
 connection = getConnection()
@@ -53,48 +53,50 @@ c = new crawler.Crawler
 
     'callback': (error, result, $) ->
         try
-            urlParts = result.uri.split '##'
-            storeName = urlParts[1]
-            storeId = urlParts[2]
-            seePrice = urlParts[3]
+            if $('.item-not-found').length is 0
+                urlParts = result.uri.split '##'
+                storeName = urlParts[1]
+                storeId = urlParts[2]
+                seePrice = urlParts[3]
 
-            cid = result.uri.match(/category-(\d+).htm/)[1]
-            $('dl.item').each (index, element) ->
-                $e = $(element)
-                defaultImage = pureText $e.find('.photo img').attr('data-ks-lazyload')
-                goodsName = $e.find('a.item-name').text()
-                price = parsePrice pureText($e.find('.c-price').text()), seePrice
-                goodHttp = $e.find('a.item-name').attr('href')
-                date = new Date()
-                dateTime = parseInt(date.getTime() / 1000)
+                cid = result.uri.match(/category-(\d+).htm/)[1]
+                $('dl.item').each (index, element) ->
+                    $e = $(element)
+                    defaultImage = pureText $e.find('.photo img').attr('data-ks-lazyload')
+                    goodsName = $e.find('a.item-name').text()
+                    price = parsePrice pureText($e.find('.c-price').text()), seePrice
+                    goodHttp = $e.find('a.item-name').attr('href')
+                    date = new Date()
+                    dateTime = parseInt(date.getTime() / 1000)
 
-                # merge into database
-                conn = getConnection()
-                conn.query "call proc_merge_good('#{storeId}','#{defaultImage}','#{price}','#{goodHttp}','#{cid}','#{storeName}','#{goodsName}','#{dateTime}',@o_retcode)", (err, res) ->
-                    conn.end()
-                    if not err
-                        resObj = res[0][0]
-                        if resObj['o_retcode'] is -1
-                            report "proc_merge_good error! parameter: '#{storeId}','#{defaultImage}','#{price}','#{goodHttp}','#{cid}','#{storeName}','#{goodsName}','#{dateTime}'"
-                        else if resObj['o_retcode'] is 1
-                            report "#{resObj['i_goods_name']} in #{resObj['i_store_name']} update successfully"
-                        else if resObj['o_retcode'] is 2
-                            report "#{resObj['i_goods_name']} in #{resObj['i_store_name']} insert successfully"
+                    if goodsName.indexOf('邮费') is -1 and goodsName.indexOf('运费') is -1
+                        # merge into database
+                        conn = getConnection()
+                        conn.query "call proc_merge_good('#{storeId}','#{defaultImage}','#{price}','#{goodHttp}','#{cid}','#{storeName}','#{goodsName}','#{dateTime}',@o_retcode)", (err, res) ->
+                            conn.end()
+                            if not err
+                                resObj = res[0][0]
+                                if resObj['o_retcode'] is -1
+                                    report "proc_merge_good error! parameter: '#{storeId}','#{defaultImage}','#{price}','#{goodHttp}','#{cid}','#{storeName}','#{goodsName}','#{dateTime}'"
+                                else if resObj['o_retcode'] is 1
+                                    report "#{resObj['i_goods_name']} in #{resObj['i_store_name']} update successfully"
+                                else if resObj['o_retcode'] is 2
+                                    report "#{resObj['i_goods_name']} in #{resObj['i_store_name']} insert successfully"
+                            else
+                                report err
+
+                        count++
+
+                if fetchType is FETCH_TYPE.ALL
+                    $next = $('a.J_SearchAsync.next')
+                    if $next.length > 0
+                        c.queue $next.attr('href') + "###{storeName}###{storeId}###{seePrice}"
                     else
-                        report err
-
-                count++
-
-            if fetchType is FETCH_TYPE.ALL
-                $next = $('a.J_SearchAsync.next')
-                if $next.length > 0
-                    c.queue $next.attr('href') + "###{storeName}###{storeId}###{seePrice}"
-                else
+                        nextFlag = true
+                        report "#{storeName}'s #{cid} finished."
+                else if fetchType is FETCH_TYPE.SINGLE_PAGE
                     nextFlag = true
                     report "#{storeName}'s #{cid} finished."
-            else if fetchType is FETCH_TYPE.SINGLE_PAGE
-                nextFlag = true
-                report "#{storeName}'s #{cid} finished."
         catch e
             report e
 

@@ -17,7 +17,7 @@ begin
     declare v_cids varchar(500);
     declare pos int(10);
 
-    select goods_id,cids into v_good_id, v_cids from ecm_goods where good_http=i_good_http limit 1;
+    select goods_id,cids into v_good_id, v_cids from ecm_goods where good_http=i_good_http and store_id=i_store_id limit 1;
 
     set o_retcode = -1;
 
