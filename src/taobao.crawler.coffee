@@ -53,38 +53,31 @@ c = new crawler.Crawler
 
     'callback': (error, result, $) ->
         try
+            if $('.cats-tree').length > 0
+                isNewTemplate = true
+                itemSelector = 'dl.item'
+            else
+                isNewTemplate = false
+                itemSelector = 'div.item'
+
             if $('.item-not-found').length is 0
                 urlParts = result.uri.split '##'
                 storeName = urlParts[1]
                 storeId = urlParts[2]
                 seePrice = urlParts[3]
 
-                cid = result.uri.match(/category-(\d+).htm/)[1]
-                $('dl.item').each (index, element) ->
+                cid = getCid isNewTemplate, result.uri
+                $(itemSelector).each (index, element) ->
                     $e = $(element)
-                    defaultImage = pureText $e.find('.photo img').attr('data-ks-lazyload')
-                    goodsName = $e.find('a.item-name').text()
-                    price = parsePrice pureText($e.find('.c-price').text()), seePrice
-                    goodHttp = $e.find('a.item-name').attr('href')
+                    defaultImage = getDefaultImage isNewTemplate, $e
+                    goodsName = getGoodsName isNewTemplate, $e
+                    price = getPrice isNewTemplate, $e, seePrice
+                    goodHttp = getGoodHttp isNewTemplate, $e
                     date = new Date()
                     dateTime = parseInt(date.getTime() / 1000)
 
                     if goodsName.indexOf('邮费') is -1 and goodsName.indexOf('运费') is -1
-                        # merge into database
-                        conn = getConnection()
-                        conn.query "call proc_merge_good('#{storeId}','#{defaultImage}','#{price}','#{goodHttp}','#{cid}','#{storeName}','#{goodsName}','#{dateTime}',@o_retcode)", (err, res) ->
-                            conn.end()
-                            if not err
-                                resObj = res[0][0]
-                                if resObj['o_retcode'] is -1
-                                    report "proc_merge_good error! parameter: '#{storeId}','#{defaultImage}','#{price}','#{goodHttp}','#{cid}','#{storeName}','#{goodsName}','#{dateTime}'"
-                                else if resObj['o_retcode'] is 1
-                                    report "#{resObj['i_goods_name']} in #{resObj['i_store_name']} update successfully"
-                                else if resObj['o_retcode'] is 2
-                                    report "#{resObj['i_goods_name']} in #{resObj['i_store_name']} insert successfully"
-                            else
-                                report err
-
+                        mergeIntoDB storeId, defaultImage, price, goodHttp, cid, storeName, goodsName, dateTime
                         count++
 
                 if fetchType is FETCH_TYPE.ALL
@@ -110,8 +103,14 @@ queueStore = (uri) ->
                 storeId = urlParts[2]
                 seePrice = urlParts[3]
 
+                if $('.cats-tree').length > 0 then isNewTemplate = true else isNewTemplate = false
+                if isNewTemplate then catsTreeSelector = 'ul.cats-tree' else catsTreeSelector = '.cat-items .bd'
+                if isNewTemplate then httpRegex = /\"http.+category-(\d+).+\"/g else httpRegex = /\"http.+scid.+\"/g
+                if isNewTemplate then catNameSelector = 'a.cat-name' else catNameSelector = '.cat-item a'
+                if isNewTemplate then hrefShouldContain = 'category-' else hrefShouldContain = 'scid'
+
                 # fetch and update cate_content
-                cateContent = $('ul.cats-tree').parent().html().trim().replace(/\"http.+category-(\d+).+\"/g, '"showCat.php?cid=$1&shop_id=' + storeId + '"').replace(/\r\n/g, '')
+                cateContent = $(catsTreeSelector).parent().html().trim().replace(httpRegex, '"showCat.php?cid=$1&shop_id=' + storeId + '"').replace(/\r\n/g, '')
                 conn = getConnection()
                 conn.query "update ecm_store set cate_content='#{cateContent}' where store_id = #{storeId}", (err, res) ->
                     conn.end()
@@ -120,10 +119,10 @@ queueStore = (uri) ->
 
                 # fetch url
                 urlArray = []
-                $('a.cat-name').each () ->
+                $(catNameSelector).each () ->
                     href = this.href.replace(/\#.+/g, '') + '&orderType=newOn' + "###{storeName}###{storeId}###{seePrice}"
                     if fetchType is FETCH_TYPE.SINGLE_PAGE and href.indexOf(parsedArguments.cid) is -1 then return
-                    if urlArray.indexOf(href, '') is -1 and href.indexOf('category-') isnt -1
+                    if urlArray.indexOf(href, '') is -1 and href.indexOf(hrefShouldContain) isnt -1
                         urlArray.push href
 
                 c.queue urlArray
@@ -172,6 +171,49 @@ parsePrice = (price, seePrice) ->
     else
         report "不支持该see_price: #{seePrice}"
         rawPrice
+
+getGoodHttp = (isNewTemplate, $element) ->
+    if isNewTemplate
+        $element.find('a.item-name').attr('href')
+    else
+        $element.find('div.desc a').attr('href')
+
+getPrice = (isNewTemplate, $element, seePrice) ->
+    if isNewTemplate
+        parsePrice pureText($element.find('.c-price').text()), seePrice
+    else
+        price = $element.find('div.price strong').text()
+        parsePrice pureText(price.substr(0, price.length-1)), seePrice
+
+getGoodsName = (isNewTemplate, $element) ->
+    if isNewTemplate
+        $element.find('a.item-name').text()
+    else
+        pureText $element.find('div.desc').text()
+
+getDefaultImage = (isNewTemplate, $element) ->
+    if isNewTemplate
+        pureText $element.find('.photo img').attr('data-ks-lazyload')
+    else
+        pureText $element.find('div.pic img').attr('src')
+
+getCid = (isNewTemplate, uri) ->
+    if isNewTemplate then uri.match(/category-(\d+).htm/)[1] else uri.match(/scid=(\d+)/)[1]
+
+mergeIntoDB = (storeId, defaultImage, price, goodHttp, cid, storeName, goodsName, dateTime) ->
+    conn = getConnection()
+    conn.query "call proc_merge_good('#{storeId}','#{defaultImage}','#{price}','#{goodHttp}','#{cid}','#{storeName}','#{goodsName}','#{dateTime}',@o_retcode)", (err, res) ->
+        conn.end()
+        if not err
+            resObj = res[0][0]
+            if resObj['o_retcode'] is -1
+                report "proc_merge_good error! parameter: '#{storeId}','#{defaultImage}','#{price}','#{goodHttp}','#{cid}','#{storeName}','#{goodsName}','#{dateTime}'"
+            else if resObj['o_retcode'] is 1
+                report "#{resObj['i_goods_name']} in #{resObj['i_store_name']} update successfully"
+            else if resObj['o_retcode'] is 2
+                report "#{resObj['i_goods_name']} in #{resObj['i_store_name']} insert successfully"
+        else
+            report err
 
 report = (msg, err) ->
     if typeof msg is 'string' and not err?
