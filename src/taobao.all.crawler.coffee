@@ -155,7 +155,7 @@ getDefaultImage = (isNewTemplate, $element) ->
     if isNewTemplate
         pureText $element.find('.photo img').attr('data-ks-lazyload')
     else
-        pureText $element.find('div.pic img').attr('src')
+        pureText $element.find('div.pic img').attr('data-ks-lazyload')
 
 mergeIntoDB = (storeId, defaultImage, price, goodHttp, storeName, goodsName, dateTime) ->
     conn = getConnection()
