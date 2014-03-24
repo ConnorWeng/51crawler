@@ -76,7 +76,7 @@ c = new crawler.Crawler
                     date = new Date()
                     dateTime = parseInt(date.getTime() / 1000)
 
-                    if goodsName.indexOf('邮费') is -1 and goodsName.indexOf('运费') is -1 and goodsName.indexOf('淘宝网 - 淘！我喜欢') is -1
+                    if goodsName.indexOf('邮费') is -1 and goodsName.indexOf('运费') is -1 and goodsName.indexOf('淘宝网 - 淘！我喜欢') is -1 and goodsName.indexOf('订金专拍') is -1
                         mergeIntoDB storeId, defaultImage, price, goodHttp, cid, storeName, goodsName, dateTime
                         count++
 
