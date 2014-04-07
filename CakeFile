@@ -1,7 +1,7 @@
 {exec, spawn} = require 'child_process'
 
 config =
-    compiled: 'compiled'
+    compiled: 'lib'
     source: 'src'
     test: 'test'
 
