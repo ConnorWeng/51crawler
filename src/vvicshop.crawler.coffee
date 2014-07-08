@@ -1,5 +1,5 @@
 #
-# usage: node vvicshop.crawler.js ../out/vvicshop.sql
+# usage: node vvicshop.crawler.js ../output/vvicshop.sql
 #
 #
 
@@ -13,15 +13,15 @@ content = ''
 counter = 0
 page = 1
 mainSellMap = {}
+batchSize = 10
 
 c = new crawler.Crawler
 
     'maxConnections': 20
 
     'onDrain': () ->
-        fs.writeFileSync "#{outputFile}", content
+        fs.appendFileSync "#{outputFile}", content
         console.log 'All complete'
-
 
     'callback': (error, result, $) ->
 
@@ -75,6 +75,10 @@ c = new crawler.Crawler
 
             console.log "#{++counter}.#{shopname} : complete"
             delete mainSellMap[shopname]
+            if counter % batchSize is 0
+              fs.appendFileSync "#{outputFile}", content
+              content = ''
+              console.log "content flushed."
 
 c.queue [
     "http://www.vvic.com/tab13.html",
