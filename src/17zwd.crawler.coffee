@@ -40,7 +40,7 @@ c = new crawler.Crawler
                 shopname = pureText $e.find('.market-list-item-sname a').text()
                 mainSell = pureText $e.find('.market-list-item-sells').text()
                 mainSellMap[shopname] = mainSell
-                c.queue "http://#{region}.17zwd.com/" + $e.find('.market-list-item-sname a').attr('href')
+                c.queue "http:" + $e.find('.market-list-item-sname a').attr('href')
         else
             marketFloorDangkou = pureText($('.shopcontent-message li:first').text()).substr(3).split(' - ')
             market = pureText marketFloorDangkou[0]
