@@ -32,6 +32,7 @@ c = new crawler.Crawler
         isServiceAvailable = (serviceName) ->
             if services isnt '' and services.indexOf(serviceName) isnt -1 then '1' else '0'
 
+        if not $? then return
         $marketListItem = $('.market-list-item')
 
         if $marketListItem.length > 0
@@ -54,25 +55,26 @@ c = new crawler.Crawler
             services = pureText $('.shopcontent-tsfw li').eq(1).text()
             price = pureText $.trim($('.shopcontent-message li').eq(1).text()).substr(3)
             shopname = pureText $('span.shopname-span').text()
-            content += util.format """
-                insert into ecm_store_#{region} (
-                shop_mall,floor,address,store_name,see_price,
-                im_qq,im_ww,tel,shop_http,has_link,
-                serv_refund,serv_exchgoods,serv_sendgoods,serv_probexch,serv_deltpic,
-                serv_modpic,shop_range,serv_golden,csv_http)
-                values(
-                '%s','%s','%s','%s','%s',
-                '%s','%s','%s','%s','%s',
-                '%s','%s','%s','%s','%s',
-                '%s','%s','%s','%s');
-                """,
-                market, floor, dangkou, shopname, price,
-                qq, ww, mobile, taobao, '0',
-                isServiceAvailable('退现金'), isServiceAvailable('包换款'), isServiceAvailable('一件代发'), '', isServiceAvailable('细节实拍'),
-                isServiceAvailable('模特实拍'), pureText(mainSellMap[shopname]), isServiceAvailable('金牌档口'), dataPack
+            if shopname isnt ''
+              content += util.format """
+                  insert into ecm_store_#{region} (
+                  shop_mall,floor,address,store_name,see_price,
+                  im_qq,im_ww,tel,shop_http,has_link,
+                  serv_refund,serv_exchgoods,serv_sendgoods,serv_probexch,serv_deltpic,
+                  serv_modpic,shop_range,serv_golden,csv_http)
+                  values(
+                  '%s','%s','%s','%s','%s',
+                  '%s','%s','%s','%s','%s',
+                  '%s','%s','%s','%s','%s',
+                  '%s','%s','%s','%s');
+                  """,
+                  market, floor, dangkou, shopname, price,
+                  qq, ww, mobile, taobao, '0',
+                  isServiceAvailable('退现金'), isServiceAvailable('包换款'), isServiceAvailable('一件代发'), '', isServiceAvailable('细节实拍'),
+                  isServiceAvailable('模特实拍'), pureText(mainSellMap[shopname]), isServiceAvailable('金牌档口'), dataPack
 
-            console.log "#{++counter}.#{shopname} : complete"
-            delete mainSellMap[shopname]
+              console.log "#{++counter}.#{shopname} : complete"
+              delete mainSellMap[shopname]
 
 while page <= maxPage
     c.queue "http://#{region}.17zwd.com/market.aspx?page=#{page++}"
